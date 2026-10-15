@@ -1,0 +1,757 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#050505">
+<title>BLACKOUT LAB // SYSTEM FAILURE</title>
+
+<style>
+:root {
+  --red: #ff1838;
+  --bg: #050505;
+  --panel: #0c0c0f;
+  --line: #292930;
+  --muted: #888892;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse at top, #22060b 0%, #09090b 42%, #030303 100%);
+  color: #f6f6f8;
+  font-family: Consolas, "Courier New", monospace;
+  overflow-x: hidden;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  opacity: .10;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 3px,
+    #fff 4px
+  );
+}
+
+header {
+  height: 72px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 5%;
+  border-bottom: 1px solid #292126;
+  background: #070707d9;
+  position: relative;
+  z-index: 2;
+}
+
+.brand {
+  font-size: 19px;
+  font-weight: 900;
+  letter-spacing: 3px;
+}
+
+.brand span { color: var(--red); }
+
+.live {
+  color: #ff596d;
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+
+main {
+  max-width: 1100px;
+  margin: 55px auto;
+  padding: 0 22px;
+}
+
+.eyebrow {
+  color: var(--red);
+  font-size: 11px;
+  letter-spacing: 4px;
+  margin-bottom: 15px;
+}
+
+h1 {
+  font-size: clamp(36px, 7vw, 76px);
+  line-height: .98;
+  letter-spacing: -3px;
+  margin: 0;
+}
+
+h1 span { color: var(--red); }
+
+.intro {
+  color: #9999a2;
+  line-height: 1.8;
+  max-width: 650px;
+  font-size: 13px;
+  margin: 22px 0 35px;
+}
+
+.panel {
+  background: linear-gradient(145deg, #101014, #09090b);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 23px;
+  margin-bottom: 18px;
+  box-shadow: 0 15px 50px #0005;
+}
+
+.panel-heading {
+  color: var(--red);
+  font-size: 11px;
+  letter-spacing: 2px;
+  margin-bottom: 20px;
+}
+
+label {
+  display: block;
+  color: #b7b7c0;
+  font-size: 11px;
+  margin-bottom: 9px;
+}
+
+input {
+  width: 100%;
+  border: 1px solid #34343c;
+  border-radius: 6px;
+  padding: 15px;
+  background: #050507;
+  color: white;
+  font: inherit;
+  font-size: 12px;
+  outline: none;
+}
+
+input:focus {
+  border-color: var(--red);
+  box-shadow: 0 0 0 2px #ff183822;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+button {
+  cursor: pointer;
+  border: 1px solid var(--red);
+  border-radius: 5px;
+  padding: 13px 17px;
+  background: var(--red);
+  color: white;
+  font: inherit;
+  font-size: 11px;
+  font-weight: bold;
+  transition: .18s;
+}
+
+button:hover {
+  filter: brightness(1.2);
+  transform: translateY(-1px);
+}
+
+button.secondary {
+  background: transparent;
+  border-color: #42424a;
+  color: #ddd;
+}
+
+button.secondary:hover { border-color: var(--red); }
+
+.small {
+  color: #777781;
+  font-size: 11px;
+  line-height: 1.8;
+  margin-top: 15px;
+}
+
+#mediaFrame {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  min-height: 220px;
+  border: 1px solid #333;
+  background: #000;
+  border-radius: 6px;
+}
+
+#mediaFrame img,
+#mediaFrame video,
+#mediaFrame iframe {
+  display: block;
+  width: 100%;
+  max-height: 65vh;
+  border: 0;
+  object-fit: contain;
+}
+
+#mediaFrame iframe { height: 450px; }
+
+#mediaFrame .empty {
+  color: #777;
+  padding: 40px 15px;
+  font-size: 12px;
+  text-align: center;
+}
+
+#status {
+  color: #888;
+  font-size: 11px;
+  margin-top: 15px;
+}
+
+/* Tela de erro simulada */
+#crashScreen {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: #050505;
+  color: white;
+  align-items: center;
+  justify-content: center;
+  padding: 8vw;
+  overflow: hidden;
+}
+
+#crashScreen.active { display: flex; }
+
+#crashScreen.blue {
+  background: #0879c9;
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+
+.crash-content {
+  max-width: 900px;
+  width: 100%;
+  position: relative;
+  z-index: 2;
+}
+
+.crash-face {
+  font-size: clamp(60px, 12vw, 115px);
+  line-height: 1;
+  margin-bottom: 28px;
+}
+
+.crash-title {
+  font-size: clamp(25px, 5vw, 54px);
+  font-weight: 900;
+  margin-bottom: 24px;
+  letter-spacing: -1px;
+}
+
+.crash-message {
+  font-size: clamp(12px, 2vw, 17px);
+  line-height: 1.8;
+  max-width: 720px;
+  overflow-wrap: anywhere;
+}
+
+.crash-progress {
+  margin-top: 35px;
+  color: #d1d1d1;
+  font-size: 12px;
+}
+
+#crashScreen.blue .crash-progress { color: #e7f3ff; }
+
+.crash-code {
+  color: #ff4b60;
+  margin-top: 20px;
+  font-size: 11px;
+  line-height: 1.8;
+}
+
+#crashScreen.blue .crash-code { color: white; }
+
+#glitchOverlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 3;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0 3px,
+    #ff173022 4px,
+    transparent 5px
+  );
+}
+
+#crashScreen.distorted #glitchOverlay {
+  opacity: 1;
+  animation: scan .11s steps(2) infinite;
+}
+
+#crashScreen.distorted .crash-content {
+  animation: shake .12s steps(2) infinite;
+  text-shadow: 3px 0 #ff003c, -3px 0 #00eaff;
+}
+
+#flash {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  pointer-events: none;
+  background: white;
+  opacity: 0;
+}
+
+#flash.hit { animation: flash .18s linear; }
+
+@keyframes scan {
+  0% { transform: translateX(-2px); }
+  50% { transform: translateX(2px); }
+  100% { transform: translateX(-1px); }
+}
+
+@keyframes shake {
+  0% { transform: translate(0, 0) skewX(0); }
+  25% { transform: translate(-4px, 2px) skewX(1deg); }
+  50% { transform: translate(4px, -1px) skewX(-1deg); }
+  100% { transform: translate(-2px, 1px); }
+}
+
+@keyframes flash {
+  0% { opacity: .7; }
+  100% { opacity: 0; }
+}
+
+footer {
+  text-align: center;
+  color: #5e5e66;
+  font-size: 10px;
+  padding: 35px 12px;
+  letter-spacing: 1px;
+}
+
+@media (max-width: 600px) {
+  header { padding: 0 18px; }
+  main { margin-top: 35px; }
+  .panel { padding: 17px; }
+  #mediaFrame iframe { height: 260px; }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="brand">BLACKOUT <span>LAB</span></div>
+  <div class="live">● SIMULATION MODE</div>
+</header>
+
+<main>
+  <div class="eyebrow">DIGITAL HORROR EXPERIENCE / 002</div>
+  <h1>SYSTEM <span>FAILURE.</span></h1>
+
+  <p class="intro">
+    Uma experiência visual de erro de sistema, com efeitos de glitch,
+    ruído digital, mensagens simuladas e reprodução de mídia.
+    Nenhum erro real do sistema é provocado.
+  </p>
+
+  <section class="panel">
+    <div class="panel-heading">01 / CONFIGURAÇÃO DA SIMULAÇÃO</div>
+
+    <label for="mediaUrl">URL DA IMAGEM, VÍDEO OU YOUTUBE (OPCIONAL)</label>
+    <input id="mediaUrl" type="url"
+      placeholder="https://exemplo.com/video.mp4">
+
+    <div class="actions">
+      <button id="start">INICIAR BLACKOUT</button>
+      <button id="showMedia" class="secondary">ABRIR MÍDIA</button>
+      <button id="fullscreen" class="secondary">TELA CHEIA</button>
+      <button id="stop" class="secondary">PARAR / ESC</button>
+    </div>
+
+    <p class="small">
+      Dica: para vídeos, use um link direto para MP4 ou WebM.
+      Links do YouTube são exibidos por incorporação.
+    </p>
+  </section>
+
+  <section class="panel">
+    <div class="panel-heading">02 / MEDIA OUTPUT</div>
+    <div id="mediaFrame">
+      <div class="empty">AGUARDANDO MÍDIA...</div>
+    </div>
+    <div id="status">STATUS: STANDBY</div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-heading">03 / EFEITOS</div>
+    <div class="actions">
+      <button id="redError" class="secondary">ERRO DISTORCIDO</button>
+      <button id="blueError" class="secondary">TELA AZUL SIMULADA</button>
+      <button id="sound" class="secondary">TESTAR GLITCH SONORO</button>
+    </div>
+    <p class="small">
+      O som é sintetizado pelo navegador e começa após clicar.
+      Ajuste o volume do dispositivo antes de testar.
+    </p>
+  </section>
+</main>
+
+<footer>BLACKOUT LAB // FICTIONAL SYSTEM SIMULATION</footer>
+
+<div id="crashScreen">
+  <div class="crash-content">
+    <div class="crash-face" id="crashFace">:(</div>
+    <div class="crash-title" id="crashTitle">SYSTEM FAILURE</div>
+    <div class="crash-message" id="crashMessage">
+      Ocorreu um erro simulado. Esta tela é apenas uma animação.
+    </div>
+    <div class="crash-progress" id="crashProgress">
+      Diagnosticando sistema fictício...
+    </div>
+    <div class="crash-code" id="crashCode"></div>
+  </div>
+  <div id="glitchOverlay"></div>
+</div>
+
+<div id="flash"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+const crash = $("crashScreen");
+const mediaFrame = $("mediaFrame");
+const statusText = $("status");
+
+let sequenceTimers = [];
+let soundContext = null;
+let activeOscillators = [];
+let stopped = false;
+
+const logMessages = [
+  "[SYS] Starting visual kernel...",
+  "[WARN] Display response delayed: 0x0000A11",
+  "[ERR] Simulated module exception.",
+  "[SYS] Attempting visual recovery...",
+  "[WARN] Frame synchronization lost.",
+  "[ERR] BLACKOUT_EXCEPTION: 0xDEAD004",
+  "[SYS] Recovery failed. Rendering error screen...",
+  "[SYS] Simulation running in browser sandbox..."
+];
+
+function clearSequence() {
+  sequenceTimers.forEach(clearTimeout);
+  sequenceTimers = [];
+}
+
+function later(fn, ms) {
+  const id = setTimeout(fn, ms);
+  sequenceTimers.push(id);
+  return id;
+}
+
+function flashScreen() {
+  $("flash").classList.remove("hit");
+  void $("flash").offsetWidth;
+  $("flash").classList.add("hit");
+}
+
+/* Som de glitch gerado localmente; nenhum arquivo é baixado. */
+function playGlitch(duration = 0.7) {
+  try {
+    const AudioContextClass =
+      window.AudioContext || window.webkitAudioContext;
+
+    if (!AudioContextClass) {
+      statusText.textContent = "STATUS: ÁUDIO NÃO SUPORTADO";
+      return;
+    }
+
+    if (!soundContext) soundContext = new AudioContextClass();
+
+    soundContext.resume();
+
+    const ctx = soundContext;
+    const now = ctx.currentTime;
+    const length = Math.floor(ctx.sampleRate * duration);
+    const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+
+    for (let i = 0; i < length; i++) {
+      const fade = Math.min(1, i / 500) *
+        Math.min(1, (length - i) / 2000);
+      data[i] = (Math.random() * 2 - 1) * fade;
+    }
+
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = "bandpass";
+    filter.frequency.setValueAtTime(1600, now);
+    filter.frequency.exponentialRampToValueAtTime(300, now + duration);
+    filter.Q.value = 0.8;
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.16, now + 0.04);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+    noise.start(now);
+    noise.stop(now + duration);
+
+    const osc = ctx.createOscillator();
+    const oscGain = ctx.createGain();
+
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(95, now);
+    osc.frequency.exponentialRampToValueAtTime(38, now + duration);
+
+    oscGain.gain.setValueAtTime(0.0001, now);
+    oscGain.gain.exponentialRampToValueAtTime(0.045, now + 0.05);
+    oscGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+    osc.connect(oscGain);
+    oscGain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + duration);
+
+    activeOscillators.push(noise, osc);
+  } catch (err) {
+    statusText.textContent = "STATUS: NÃO FOI POSSÍVEL INICIAR O ÁUDIO";
+  }
+}
+
+function hideCrash() {
+  crash.classList.remove("active", "blue", "distorted");
+}
+
+function stopAll() {
+  stopped = true;
+  clearSequence();
+  hideCrash();
+
+  mediaFrame.querySelectorAll("video, audio").forEach(media => {
+    media.pause();
+  });
+
+  statusText.textContent = "STATUS: SIMULAÇÃO PARADA";
+}
+
+function showCrash(mode = "red") {
+  clearSequence();
+  stopped = false;
+
+  crash.classList.add("active");
+  crash.classList.remove("blue", "distorted");
+
+  if (mode === "blue") {
+    crash.classList.add("blue");
+    $("crashFace").textContent = ":(";
+    $("crashTitle").textContent = "Seu dispositivo encontrou um problema";
+    $("crashMessage").textContent =
+      "Esta é uma reprodução fictícia de uma tela de erro. " +
+      "Nenhum diagnóstico real está sendo executado.";
+    $("crashProgress").textContent = "0% concluído";
+    $("crashCode").textContent = "STOP CODE: SIMULATED_ERROR";
+  } else {
+    crash.classList.add("distorted");
+    $("crashFace").textContent = "!";
+    $("crashTitle").textContent = "CRITICAL SYSTEM FAILURE";
+    $("crashMessage").textContent =
+      "Falha simulada no ambiente visual. " +
+      "A sequência abaixo é fictícia e não representa um erro real do computador.";
+    $("crashProgress").textContent = "RECONSTRUCTING DISPLAY...";
+    $("crashCode").textContent =
+      "BLACKOUT_EXCEPTION // 0xDEAD004 // VISUAL_MODE_ONLY";
+  }
+
+  flashScreen();
+  playGlitch(0.9);
+}
+
+function startBlackout() {
+  stopAll();
+  stopped = false;
+
+  showCrash("red");
+  $("crashProgress").textContent = "INITIALIZING...";
+  $("crashCode").textContent = "";
+
+  let i = 0;
+
+  function updateLog() {
+    if (stopped) return;
+
+    $("crashCode").textContent =
+      logMessages.slice(0, i + 1).join("\n");
+
+    $("crashProgress").textContent =
+      "PROCESSO SIMULADO: " + Math.min(100, (i + 1) * 13) + "%";
+
+    if (i < logMessages.length - 1) {
+      i++;
+      later(updateLog, 460);
+    }
+  }
+
+  updateLog();
+
+  later(() => {
+    if (stopped) return;
+    hideCrash();
+    displayMedia();
+  }, 5000);
+}
+
+function youtubeId(url) {
+  try {
+    const u = new URL(url);
+    const host = u.hostname.replace(/^www\./, "");
+
+    if (host === "youtu.be") return u.pathname.slice(1).split("/")[0];
+
+    if (host.endsWith("youtube.com")) {
+      if (u.pathname === "/watch") return u.searchParams.get("v");
+      const match = u.pathname.match(/^\/(?:embed|shorts)\/([^/?]+)/);
+      if (match) return match[1];
+    }
+  } catch (_) {}
+
+  return null;
+}
+
+function displayMedia() {
+  hideCrash();
+  mediaFrame.innerHTML = "";
+  mediaFrame.style.display = "flex";
+
+  const url = $("mediaUrl").value.trim();
+
+  if (!url) {
+    mediaFrame.innerHTML =
+      '<div class="empty">NENHUMA MÍDIA INFORMADA.<br>Adicione uma URL no campo acima.</div>';
+    statusText.textContent = "STATUS: AGUARDANDO URL";
+    return;
+  }
+
+  let parsed;
+
+  try {
+    parsed = new URL(url);
+    if (!["https:", "http:"].includes(parsed.protocol)) throw new Error();
+  } catch (_) {
+    mediaFrame.innerHTML =
+      '<div class="empty">URL INVÁLIDA. USE UM LINK HTTP OU HTTPS.</div>';
+    statusText.textContent = "STATUS: URL INVÁLIDA";
+    return;
+  }
+
+  const id = youtubeId(url);
+
+  if (id) {
+    const frame = document.createElement("iframe");
+    frame.src = "https://www.youtube-nocookie.com/embed/" +
+      encodeURIComponent(id);
+    frame.title = "Vídeo do YouTube";
+    frame.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+    frame.allowFullscreen = true;
+    mediaFrame.appendChild(frame);
+    statusText.textContent = "STATUS: YOUTUBE";
+    return;
+  }
+
+  const path = parsed.pathname.toLowerCase();
+
+  if (/\.(png|jpe?g|gif|webp|avif|bmp|svg)$/.test(path)) {
+    const img = document.createElement("img");
+    img.src = url;
+    img.alt = "Imagem da simulação";
+
+    img.onerror = () => {
+      mediaFrame.innerHTML =
+        '<div class="empty">NÃO FOI POSSÍVEL CARREGAR A IMAGEM.</div>';
+      statusText.textContent = "STATUS: FALHA AO CARREGAR";
+    };
+
+    mediaFrame.appendChild(img);
+    statusText.textContent = "STATUS: IMAGE OUTPUT";
+    return;
+  }
+
+  const video = document.createElement("video");
+  video.src = url;
+  video.controls = true;
+  video.autoplay = true;
+  video.playsInline = true;
+
+  video.onerror = () => {
+    mediaFrame.innerHTML =
+      '<div class="empty">FORMATO NÃO SUPORTADO OU LINK NÃO DIRETO.<br>Experimente um arquivo MP4 ou WebM.</div>';
+    statusText.textContent = "STATUS: FALHA AO CARREGAR VÍDEO";
+  };
+
+  mediaFrame.appendChild(video);
+  statusText.textContent = "STATUS: VIDEO OUTPUT";
+}
+
+$("start").addEventListener("click", startBlackout);
+
+$("showMedia").addEventListener("click", () => {
+  stopAll();
+  displayMedia();
+});
+
+$("stop").addEventListener("click", stopAll);
+
+$("redError").addEventListener("click", () => {
+  stopAll();
+  showCrash("red");
+});
+
+$("blueError").addEventListener("click", () => {
+  stopAll();
+  showCrash("blue");
+});
+
+$("sound").addEventListener("click", () => playGlitch(1.1));
+
+$("fullscreen").addEventListener("click", async () => {
+  try {
+    if (!document.fullscreenElement) {
+      await document.documentElement.requestFullscreen();
+    } else {
+      await document.exitFullscreen();
+    }
+  } catch (_) {
+    statusText.textContent = "STATUS: TELA CHEIA INDISPONÍVEL";
+  }
+});
+
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape") {
+    stopAll();
+
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    }
+  }
+});
+</script>
+</body>
+</html>
